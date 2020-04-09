@@ -1,0 +1,97 @@
+package jitter
+
+import (
+	"math"
+	"testing"
+	"time"
+)
+
+func TestNewTicker(t *testing.T) {
+	type args struct {
+		d      time.Duration
+		factor float64
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantPanic bool
+	}{
+		{
+			name:      "negative duration panics",
+			args:      args{d: -1 * time.Second, factor: 0.1},
+			wantPanic: true,
+		},
+		{
+			name:      "factor >1.0 panics",
+			args:      args{d: time.Second, factor: 1.1},
+			wantPanic: true,
+		},
+		{
+			name:      "successful initiation",
+			args:      args{d: time.Second, factor: 0.9},
+			wantPanic: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Errorf("NewTicker did not panic")
+					}
+				}()
+			}
+			ticker := NewTicker(tt.args.d, tt.args.factor)
+			ticker.Stop()
+		})
+	}
+}
+
+func TestTicker_start(t *testing.T) {
+	t.Parallel()
+
+	// measures actual timing, need to utilize a high enough time period to not
+	// have scheduler overhead be a factor
+	const (
+		d        = 10 * time.Millisecond
+		factor   = 0.3
+		samples  = 10
+		overhead = 1 * time.Millisecond
+	)
+
+	// check time elapsed for sample number of ticks is within expected range
+	min := time.Duration(math.Floor(float64(d)*(1-factor)))*samples - overhead
+	max := time.Duration(math.Ceil(float64(d)*(1+factor)))*samples + overhead
+	ticker := NewTicker(d, factor)
+	t1 := time.Now()
+	for i := 0; i < samples; i++ {
+		<-ticker.C
+	}
+	elapsed := time.Since(t1)
+	if elapsed < min || elapsed > max {
+		t.Errorf("time elapsed for %v ticks %v outside of expected range %v - %v",
+			samples, elapsed, min, max)
+	}
+}
+
+func TestTicker_stop(t *testing.T) {
+	t.Parallel()
+
+	const (
+		d            = 1 * time.Millisecond
+		beforeTicks  = 3
+		factor       = 0.1
+		waitDuration = 10 * time.Millisecond
+	)
+	ticker := NewTicker(d, factor)
+	for i := 0; i < beforeTicks; i++ {
+		<-ticker.C
+	}
+	ticker.Stop()
+	select {
+	case <-ticker.C:
+		t.Fatal("got tick after Stop()")
+	case <-time.After(waitDuration):
+		t.Log("detected no ticks after Stop()")
+	}
+}
