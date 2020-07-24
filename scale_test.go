@@ -12,6 +12,7 @@ func TestScale(t *testing.T) {
 			f       = 0.5
 			samples = 20
 		)
+
 		for i := 0; i < samples; i++ {
 			r := Scale(d, f)
 			t.Log(r)

@@ -25,12 +25,14 @@ import (
 // Duration. If you wish to avoid these potential scenarios, confine your factor
 // such that `0.0 < math.Abs(f) < 1.0`.
 func Scale(d time.Duration, factor float64) time.Duration {
-	min := int64(math.Floor(float64(d) * (1 - factor)))
-	max := int64(math.Ceil(float64(d) * (1 + factor)))
+	var (
+		min = int64(math.Floor(float64(d) * (1 - factor)))
+		max = int64(math.Ceil(float64(d) * (1 + factor)))
+	)
 	return time.Duration(randRange(min, max))
 }
 
-// canonical Go boilerplate for random within a range
+// randRange is canonical Go boilerplate for random within a range.
 func randRange(min, max int64) int64 {
 	return rand.Int63n(max-min) + min
 }

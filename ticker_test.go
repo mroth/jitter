@@ -68,14 +68,17 @@ func TestTicker_start(t *testing.T) {
 	)
 
 	// check time elapsed for sample number of ticks is within expected range
-	min := time.Duration(math.Floor(float64(d)*(1-factor)))*samples - overhead
-	max := time.Duration(math.Ceil(float64(d)*(1+factor)))*samples + overhead
 	ticker := NewTicker(d, factor)
 	t1 := time.Now()
 	for i := 0; i < samples; i++ {
 		<-ticker.C
 	}
-	elapsed := time.Since(t1)
+
+	var (
+		elapsed = time.Since(t1)
+		min     = time.Duration(math.Floor(float64(d)*(1-factor)))*samples - overhead
+		max     = time.Duration(math.Ceil(float64(d)*(1+factor)))*samples + overhead
+	)
 	if elapsed < min || elapsed > max {
 		t.Errorf("time elapsed for %v ticks %v outside of expected range %v - %v",
 			samples, elapsed, min, max)
