@@ -8,30 +8,37 @@ import (
 
 // A Ticker holds a channel that delivers `ticks' of a clock at intervals,
 // deviating with constrained random jitter.
+//
+// It adjusts the intervals or drops ticks to make up for slow receivers.
 type Ticker struct {
 	C      <-chan time.Time // The channel on which the ticks are delivered.
 	cancel context.CancelFunc
 }
 
-// NewTicker returns a new Ticker containing a channel that will send the
-// time with a period specified by the duration argument, that will randomly
-// jitter based on the provided the scaling factor.
+// NewTicker returns a new Ticker containing a channel that will send the time
+// with a period specified by the duration argument, but adjusted with random
+// jitter based on the specified scaling factor.
 //
-// The duration d must be greater than zero; and the factor must be <= 1.0
-func NewTicker(d time.Duration, factor float64) *Ticker {
-	if d <= 0 {
-		panic(errors.New("non-positive interval for NewTicker"))
-	}
-	if factor > 1.0 {
-		panic(errors.New("factor > 1.0 for NewTicker"))
+// The duration d must be greater than zero; and the scaling factor f must be
+// within the range 0 < f <= 1.0, or NewTicker will panic.
+//
+// Stop the ticker to release associated resources.
+func NewTicker(d time.Duration, f float64) *Ticker {
+	return ContextTicker(context.Background(), d, f)
+}
+
+// ContextTicker is identical to NewTicker but also takes a specified context.
+// If this context is cancelled, the Ticker will automatically Stop.
+func ContextTicker(ctx context.Context, d time.Duration, f float64) *Ticker {
+	switch {
+	case d <= 0:
+		panic(errors.New("non-positive interval for duration"))
+	case f > 1.0 || f <= 0:
+		panic(errors.New("factor must be 0 < f <= 1.0"))
 	}
 
-	// TODO: should we allow base Context to be passed in in future?
-	//
-	// This could be done in a alternative constructor to keep the primary API
-	// identical to time.Ticker, but would still add some noise to the public
-	// methods in this package, which are currently nice and simple.
-	ctx, cf := context.WithCancel(context.Background())
+	// Add internal cancelFunc to the context, to be stored for use in Stop().
+	ctx, cf := context.WithCancel(ctx)
 
 	// Give the channel a 1-element time buffer.
 	//
@@ -40,7 +47,8 @@ func NewTicker(d time.Duration, factor float64) *Ticker {
 	c := make(chan time.Time, 1)
 
 	go func() {
-		timer := time.NewTimer(Scale(d, factor)) // initial timer
+		timer := time.NewTimer(Scale(d, f)) // initial timer
+
 		for {
 			select {
 			case tc := <-timer.C:
@@ -49,7 +57,7 @@ func NewTicker(d time.Duration, factor float64) *Ticker {
 				// Since the program has already received a value from timer.C,
 				// the timer is known to have expired and the channel drained,
 				// so t.Reset can be used directly.
-				timer.Reset(Scale(d, factor))
+				timer.Reset(Scale(d, f))
 
 				// Non-blocking rebroadcast of time on c.
 				//
@@ -72,10 +80,7 @@ func NewTicker(d time.Duration, factor float64) *Ticker {
 		}
 	}()
 
-	return &Ticker{
-		C:      c,
-		cancel: cf,
-	}
+	return &Ticker{C: c, cancel: cf}
 }
 
 // Stop turns off a ticker. After Stop, no more ticks will be sent. Stop does
