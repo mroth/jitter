@@ -17,17 +17,17 @@ import (
 	"time"
 )
 
-// Scale simulates jitter by scaling a time.Duration randomly within factor.
+// Scale simulates jitter by scaling a time.Duration randomly within factor f.
 //
 // Note that using a factor of math.Abs(f) > 1.0 may result in the sign of the
 // result changing (e.g. a positive Duration may become negative, and vice
 // versa). Additionally, a factor of math.Abs(f) == 1.0 may result in a zero
 // Duration. If you wish to avoid these potential scenarios, confine your factor
 // such that 0.0 < math.Abs(f) < 1.0.
-func Scale(d time.Duration, factor float64) time.Duration {
+func Scale(d time.Duration, f float64) time.Duration {
 	var (
-		min = int64(math.Floor(float64(d) * (1 - factor)))
-		max = int64(math.Ceil(float64(d) * (1 + factor)))
+		min = int64(math.Floor(float64(d) * (1 - f)))
+		max = int64(math.Ceil(float64(d) * (1 + f)))
 	)
 	return time.Duration(randRange(min, max))
 }

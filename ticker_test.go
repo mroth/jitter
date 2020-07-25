@@ -121,7 +121,7 @@ func TestTicker_ctxExpired(t *testing.T) {
 	)
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	ticker := ContextTicker(ctx, d, factor)
+	ticker := NewTickerWithContext(ctx, d, factor)
 
 	for i := 0; i < beforeTicks; i++ {
 		<-ticker.C

@@ -24,12 +24,12 @@ type Ticker struct {
 //
 // Stop the ticker to release associated resources.
 func NewTicker(d time.Duration, f float64) *Ticker {
-	return ContextTicker(context.Background(), d, f)
+	return NewTickerWithContext(context.Background(), d, f)
 }
 
-// ContextTicker is identical to NewTicker but also takes a specified context.
+// NewTickerWithContext is identical to NewTicker but also takes a specified context.
 // If this context is cancelled, the Ticker will automatically Stop.
-func ContextTicker(ctx context.Context, d time.Duration, f float64) *Ticker {
+func NewTickerWithContext(ctx context.Context, d time.Duration, f float64) *Ticker {
 	switch {
 	case d <= 0:
 		panic(errors.New("non-positive interval for duration"))
