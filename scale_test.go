@@ -16,6 +16,9 @@ func TestScale(t *testing.T) {
 		for i := 0; i < samples; i++ {
 			r := Scale(d, f)
 			t.Log(r)
+			if r < 5*time.Second || r > 15*time.Second {
+				t.Error("sample outside of range: ", r)
+			}
 		}
 	})
 }
