@@ -1,5 +1,5 @@
 # jitter
-[![PkgGoDev](https://pkg.go.dev/badge/mroth/jitter)](https://pkg.go.dev/mroth/jitter)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/mroth/jitter)](https://pkg.go.dev/github.com/mroth/jitter)
 [![CodeFactor](https://www.codefactor.io/repository/github/mroth/jitter/badge)](https://www.codefactor.io/repository/github/mroth/jitter)
 
 A simple Go library providing functionality for generating durations and tickers
