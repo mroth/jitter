@@ -39,6 +39,8 @@ func Scale(d time.Duration, f float64) time.Duration {
 }
 
 // randRange is canonical Go boilerplate for random within a range.
+//
+// panics if max <= min.
 func randRange(min, max int64) int64 {
 	return rand.Int63n(max-min) + min
 }
