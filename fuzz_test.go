@@ -12,6 +12,9 @@ func FuzzScale(f *testing.F) {
 	f.Add(int64(time.Second), 0.1)
 
 	f.Fuzz(func(t *testing.T, d int64, f float64) {
+		if f <= 0 {
+			t.Skip() // documented panic
+		}
 		_ = Scale(time.Duration(d), f)
 	})
 }

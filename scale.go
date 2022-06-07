@@ -19,12 +19,18 @@ import (
 
 // Scale simulates jitter by scaling a time.Duration randomly within factor f.
 //
-// Note that using a factor of math.Abs(f) > 1.0 may result in the sign of the
+// Note that using a factor of f > 1.0 may result in the sign of the
 // result changing (e.g. a positive Duration may become negative, and vice
-// versa). Additionally, a factor of math.Abs(f) == 1.0 may result in a zero
+// versa). Additionally, a factor of f == 1.0 may result in a zero
 // Duration. If you wish to avoid these potential scenarios, confine your factor
-// such that 0.0 < math.Abs(f) < 1.0.
+// such that 0.0 < f < 1.0.
+//
+// If f <= 0, Scale will panic.
 func Scale(d time.Duration, f float64) time.Duration {
+	if f <= 0 {
+		panic("invalid scaling factor for Scale")
+	}
+
 	var (
 		min = int64(math.Floor(float64(d) * (1 - f)))
 		max = int64(math.Ceil(float64(d) * (1 + f)))
