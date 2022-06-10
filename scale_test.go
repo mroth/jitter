@@ -23,16 +23,17 @@ func TestScale(t *testing.T) {
 		}
 	})
 
-	t.Run("nonpositive scaling factors panic", func(t *testing.T) {
+	t.Run("invalid arguments panic", func(t *testing.T) {
 		var testcases = []struct {
 			d         time.Duration
 			f         float64
 			wantPanic bool
 		}{
 			{d: time.Second, f: 0.1, wantPanic: false},
-			{d: time.Second, f: 100.0, wantPanic: false},
+			{d: time.Second, f: 1.1, wantPanic: true},
 			{d: time.Second, f: -0.1, wantPanic: true},
 			{d: time.Second, f: 0.0, wantPanic: true},
+			{d: -1 * time.Second, f: 0.1, wantPanic: true}, // negative duration
 		}
 
 		for _, tc := range testcases {
@@ -48,7 +49,7 @@ func assertPanic(t *testing.T, f func(), want bool) {
 	defer func() {
 		r := recover()
 		if got := (r != nil); got != want {
-			t.Errorf("wantPanic: %v, gotPanic: %v", want, got)
+			t.Errorf("wantPanic: %v, gotPanic: %v [%v]", want, got, r)
 		}
 	}()
 	f()

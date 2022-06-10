@@ -12,6 +12,7 @@ instead, which is very full featured and contains its own jitter support.
 */
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"time"
@@ -19,23 +20,24 @@ import (
 
 // Scale simulates jitter by scaling a time.Duration randomly within factor f.
 //
-// Note that using a factor of f > 1.0 may result in the sign of the
-// result changing (e.g. a positive Duration may become negative, and vice
-// versa). Additionally, a factor of f == 1.0 may result in a zero
-// Duration. If you wish to avoid these potential scenarios, confine your factor
-// such that 0.0 < f < 1.0.
-//
-// If f <= 0, Scale will panic.
+// The duration d must be greater than zero; and the scaling factor f must be
+// within the range 0 < f <= 1.0, or Scale will panic.
 func Scale(d time.Duration, f float64) time.Duration {
-	if f <= 0 {
-		panic("invalid scaling factor for Scale")
-	}
-
+	assertScaleArgs(d, f)
 	var (
 		min = int64(math.Floor(float64(d) * (1 - f)))
 		max = int64(math.Ceil(float64(d) * (1 + f)))
 	)
 	return time.Duration(randRange(min, max))
+}
+
+func assertScaleArgs(d time.Duration, f float64) {
+	switch {
+	case d <= 0:
+		panic(errors.New("non-positive interval for duration"))
+	case f > 1.0 || f <= 0:
+		panic(errors.New("scaling factor must be 0 < f <= 1.0"))
+	}
 }
 
 // randRange returns a nonnegative pseudo-random number in the half open
