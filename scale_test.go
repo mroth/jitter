@@ -2,6 +2,7 @@ package jitter
 
 import (
 	"fmt"
+	"math"
 	"testing"
 	"time"
 )
@@ -33,11 +34,12 @@ func TestScale(t *testing.T) {
 			{d: time.Second, f: 1.1, wantPanic: true},
 			{d: time.Second, f: -0.1, wantPanic: true},
 			{d: time.Second, f: 0.0, wantPanic: true},
-			{d: -1 * time.Second, f: 0.1, wantPanic: true}, // negative duration
+			{d: -1 * time.Second, f: 0.1, wantPanic: true},              // negative duration
+			{d: time.Duration(math.MaxInt64), f: 0.1, wantPanic: false}, // max duration
 		}
 
 		for _, tc := range testcases {
-			t.Run(fmt.Sprintf("%f", tc.f), func(t *testing.T) {
+			t.Run(fmt.Sprintf("d=%d,f=%v", tc.d, tc.f), func(t *testing.T) {
 				assertPanic(t, func() { Scale(tc.d, tc.f) }, tc.wantPanic)
 			})
 		}

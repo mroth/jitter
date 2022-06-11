@@ -13,6 +13,7 @@ instead, which is very full featured and contains its own jitter support.
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -28,6 +29,9 @@ func Scale(d time.Duration, f float64) time.Duration {
 		min = int64(math.Floor(float64(d) * (1 - f)))
 		max = int64(math.Ceil(float64(d) * (1 + f)))
 	)
+	if min > max {
+		panic(fmt.Sprintf("min > max, %v > %v", min, max))
+	}
 	return time.Duration(randRange(min, max))
 }
 
