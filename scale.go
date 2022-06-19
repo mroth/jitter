@@ -13,7 +13,6 @@ instead, which is very full featured and contains its own jitter support.
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -25,13 +24,7 @@ import (
 // within the range 0 < f <= 1.0, or Scale will panic.
 func Scale(d time.Duration, f float64) time.Duration {
 	assertScaleArgs(d, f)
-	var (
-		min = int64(math.Floor(float64(d) * (1 - f)))
-		max = int64(math.Ceil(float64(d) * (1 + f)))
-	)
-	if min > max {
-		panic(fmt.Sprintf("min > max, %v > %v", min, max))
-	}
+	min, max := scaleBounds(int64(d), f)
 	return time.Duration(randRange(min, max))
 }
 
@@ -42,6 +35,23 @@ func assertScaleArgs(d time.Duration, f float64) {
 	case f > 1.0 || f <= 0:
 		panic(errors.New("scaling factor must be 0 < f <= 1.0"))
 	}
+}
+
+// scaleBounds returns the min and max values for n after applying scaling
+// factor f.
+//
+// if the max were to overflow, we instead truncate and return math.MaxInt64.
+//
+// as an internal function, it assumes n and f have already been validated via
+// assertScaleArgs and does not handle edge cases outside of those parameters.
+func scaleBounds(n int64, f float64) (min, max int64) {
+	minf := math.Floor(float64(n) * (1 - f))
+	maxf := math.Ceil(float64(n) * (1 + f))
+
+	if maxf > math.MaxInt64 {
+		return int64(minf), math.MaxInt64
+	}
+	return int64(minf), int64(maxf)
 }
 
 // randRange returns a nonnegative pseudo-random number in the half open
