@@ -9,13 +9,17 @@ import (
 )
 
 func ExampleNewTicker() {
-	// ticker with base duration of 1 second and 0.5 scaling factor
-	ticker := jitter.NewTicker(time.Second, 0.5)
+	// jitter uses the global random source, seed it appropriately. for this
+	// example, we seed it to a constant for predictable output.
+	rand.Seed(42)
+
+	// ticker with base duration of 10 milliseconds and 0.5 scaling factor
+	ticker := jitter.NewTicker(10*time.Millisecond, 0.5)
 	defer ticker.Stop()
 
 	prev := time.Now()
-	for i := 0; i < 10; i++ {
-		t := <-ticker.C // time elapsed random in range [0.5s, 1.5s]
+	for i := 0; i < 5; i++ {
+		t := <-ticker.C // time elapsed is random in range (5ms, 15ms).
 		fmt.Println("Time elapsed since last tick: ", t.Sub(prev))
 		prev = t
 	}

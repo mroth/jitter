@@ -23,7 +23,7 @@ defer ticker.Stop()
 
 prev := time.Now()
 for {
-    t := <-ticker.C // time elapsed random in range [0.5s, 1.5s]
+    t := <-ticker.C // time elapsed random in range (0.5s, 1.5s)
     fmt.Println("Time elapsed since last tick: ", t.Sub(prev))
     prev = t
 }
