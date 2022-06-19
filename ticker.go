@@ -2,7 +2,6 @@ package jitter
 
 import (
 	"context"
-	"errors"
 	"time"
 )
 
@@ -30,12 +29,8 @@ func NewTicker(d time.Duration, f float64) *Ticker {
 // NewTickerWithContext is identical to NewTicker but also takes a specified context.
 // If this context is cancelled, the Ticker will automatically Stop.
 func NewTickerWithContext(ctx context.Context, d time.Duration, f float64) *Ticker {
-	switch {
-	case d <= 0:
-		panic(errors.New("non-positive interval for duration"))
-	case f > 1.0 || f <= 0:
-		panic(errors.New("factor must be 0 < f <= 1.0"))
-	}
+	// validate scale args early, to panic immediately on invalid arguments.
+	assertScaleArgs(d, f)
 
 	// Add internal cancelFunc to the context, to be stored for use in Stop().
 	ctx, cf := context.WithCancel(ctx)
