@@ -13,6 +13,10 @@ jobs:
           - "1.17"
           - "1.18"
           - "1.19"
+          - "1.20"
+          - "1.21"
+          - "1.22"
+          - "1.23"
     name: Go ${{ matrix.go }} test
     steps:
       - name: Checkout code
@@ -20,6 +24,6 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: ${{ matrix.go }}
       - name: Test
         run: go test -race ./...
