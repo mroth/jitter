@@ -4,6 +4,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         go:
           - "1.13"
@@ -17,13 +18,15 @@ jobs:
           - "1.21"
           - "1.22"
           - "1.23"
+          - "1.24"
     name: Go ${{ matrix.go }} test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
+          cache: false
       - name: Test
         run: go test -race ./...
