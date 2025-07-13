@@ -1,7 +1,12 @@
-on: [push, pull_request]
 name: test
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: Go ${{ matrix.go }} test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -19,7 +24,8 @@ jobs:
           - "1.22"
           - "1.23"
           - "1.24"
-    name: Go ${{ matrix.go }} test
+    env:
+      GOTOOLCHAIN: local
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
