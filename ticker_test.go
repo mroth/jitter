@@ -40,7 +40,6 @@ func TestNewTicker(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
 				defer func() {
@@ -70,7 +69,7 @@ func TestTicker_start(t *testing.T) {
 	// check time elapsed for sample number of ticks is within expected range
 	ticker := NewTicker(d, factor)
 	t1 := time.Now()
-	for i := 0; i < samples; i++ {
+	for range samples {
 		<-ticker.C
 	}
 
@@ -97,7 +96,7 @@ func TestTicker_stop(t *testing.T) {
 
 	ticker := NewTicker(d, factor)
 
-	for i := 0; i < beforeTicks; i++ {
+	for range beforeTicks {
 		<-ticker.C
 	}
 
@@ -123,7 +122,7 @@ func TestTicker_ctxExpired(t *testing.T) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	ticker := NewTickerWithContext(ctx, d, factor)
 
-	for i := 0; i < beforeTicks; i++ {
+	for range beforeTicks {
 		<-ticker.C
 	}
 

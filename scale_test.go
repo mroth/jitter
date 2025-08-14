@@ -15,7 +15,7 @@ func TestScale(t *testing.T) {
 			samples = 20
 		)
 
-		for i := 0; i < samples; i++ {
+		for range samples {
 			r := Scale(d, f)
 			t.Log(r)
 			if r < 5*time.Second || r > 15*time.Second {
@@ -83,7 +83,7 @@ func assertPanic(t *testing.T, f func(), want bool) {
 }
 
 func BenchmarkScale(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		Scale(time.Second, 0.5)
 	}
 }

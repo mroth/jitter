@@ -13,7 +13,7 @@ func ExampleNewTicker() {
 	defer ticker.Stop()
 
 	prev := time.Now()
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		t := <-ticker.C // time elapsed is random in range (5ms, 15ms).
 		fmt.Println("Time elapsed since last tick: ", t.Sub(prev))
 		prev = t
