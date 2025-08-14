@@ -1,3 +1,3 @@
 module github.com/mroth/jitter
 
-go 1.13
+go 1.25
