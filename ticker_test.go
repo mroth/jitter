@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -54,39 +55,37 @@ func TestNewTicker(t *testing.T) {
 	}
 }
 
+// checks time elapsed for sample number of ticks is within expected range
 func TestTicker_start(t *testing.T) {
-	t.Parallel()
-
-	// measures actual timing, need to utilize a high enough time period to not
-	// have scheduler overhead be a factor
 	const (
-		d        = 10 * time.Millisecond
-		factor   = 0.3
-		samples  = 10
-		overhead = 1 * time.Millisecond
+		d       = 10 * time.Millisecond
+		factor  = 0.3
+		samples = 10
 	)
 
-	// check time elapsed for sample number of ticks is within expected range
-	ticker := NewTicker(d, factor)
-	t1 := time.Now()
-	for range samples {
-		<-ticker.C
-	}
+	synctest.Test(t, func(t *testing.T) {
+		ticker := NewTicker(d, factor)
+		t.Cleanup(ticker.Stop)
 
-	var (
-		elapsed = time.Since(t1)
-		min     = time.Duration(math.Floor(float64(d)*(1-factor)))*samples - overhead
-		max     = time.Duration(math.Ceil(float64(d)*(1+factor)))*samples + overhead
-	)
-	if elapsed < min || elapsed > max {
-		t.Errorf("time elapsed for %v ticks %v outside of expected range %v - %v",
-			samples, elapsed, min, max)
-	}
+		t1 := time.Now()
+		for range samples {
+			<-ticker.C
+		}
+
+		var (
+			elapsed = time.Since(t1)
+			min     = time.Duration(math.Floor(float64(d)*(1-factor))) * samples
+			max     = time.Duration(math.Ceil(float64(d)*(1+factor))) * samples
+		)
+		if elapsed < min || elapsed > max {
+			t.Errorf("time elapsed for %v ticks %v outside of expected range %v - %v",
+				samples, elapsed, min, max)
+		}
+	})
 }
 
+// checks that Stop() prevents further ticks from being sent
 func TestTicker_stop(t *testing.T) {
-	t.Parallel()
-
 	const (
 		d            = time.Millisecond
 		factor       = 0.1
@@ -94,24 +93,24 @@ func TestTicker_stop(t *testing.T) {
 		waitDuration = d * 10 // monitor after stop
 	)
 
-	ticker := NewTicker(d, factor)
+	synctest.Test(t, func(t *testing.T) {
+		ticker := NewTicker(d, factor)
+		for range beforeTicks {
+			<-ticker.C
+		}
+		ticker.Stop()
 
-	for range beforeTicks {
-		<-ticker.C
-	}
-
-	ticker.Stop()
-	select {
-	case <-ticker.C:
-		t.Fatal("got tick after Stop()")
-	case <-time.After(waitDuration):
-		t.Log("detected no ticks after Stop()")
-	}
+		select {
+		case <-ticker.C:
+			t.Fatal("got tick after Stop()")
+		case <-time.After(waitDuration):
+			t.Log("detected no ticks after Stop()")
+		}
+	})
 }
 
+// checks that context cancellation prevents further ticks from being sent
 func TestTicker_ctxExpired(t *testing.T) {
-	t.Parallel()
-
 	const (
 		d            = time.Millisecond
 		factor       = 0.1
@@ -119,18 +118,20 @@ func TestTicker_ctxExpired(t *testing.T) {
 		waitDuration = d * 10 // monitor after cancel
 	)
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	ticker := NewTickerWithContext(ctx, d, factor)
+	synctest.Test(t, func(t *testing.T) {
+		ctx, cancelFunc := context.WithCancel(t.Context())
+		ticker := NewTickerWithContext(ctx, d, factor)
 
-	for range beforeTicks {
-		<-ticker.C
-	}
+		for range beforeTicks {
+			<-ticker.C
+		}
 
-	cancelFunc()
-	select {
-	case <-ticker.C:
-		t.Fatal("got tick after context cancelled")
-	case <-time.After(waitDuration):
-		t.Log("detected no ticks after context cancelled")
-	}
+		cancelFunc()
+		select {
+		case <-ticker.C:
+			t.Fatal("got tick after context cancelled")
+		case <-time.After(waitDuration):
+			t.Log("detected no ticks after context cancelled")
+		}
+	})
 }
